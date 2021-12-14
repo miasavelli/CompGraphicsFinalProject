@@ -1,32 +1,27 @@
 "use strict";
 import {GLTFLoader} from 'https://unpkg.com/three@0.120.0/examples/jsm/loaders/GLTFLoader.js';
 
+let container;
+let scene, camera, renderer;
+let gun;
+let gunbase;
+let ray;
+let gunRotateY = 0;
 
-let container;      	        // keeping here for easy access
-let scene, camera, renderer;    // Three.js rendering basics.
-let gun;                        // The gun, which can be "aimed" by the mouse.
-let gunbase;                    // The cylinder at the base of the gun; the gun is a child of this cylinder.
-let ray;                        // A yellow "ray" from the barrel of the gun.
-let rayVector;                  // The gun and the ray point from (0,0,0) towards this vector
-                                //        (in the local coordinate system of the gunbase).
-let gunRotateY = 0;             // Amount by which gun is rotated around the y-axis
-                                //    (carrying the camera with it).
 let raycaster = new THREE.Raycaster();
 
-let objects = [];
 let denimMap;
 let bullet;
 let score;
-let storyCounter = 0; // dialogue purposeds
+let storyCounter = 0; // dialogue purposes
 
 var loader = new GLTFLoader();
 let testModels = [];
 let testModels1 = [];
-let testModels2 = [];
 
 let testDressModel = [];
 
-// constants
+// constants body load
 let testBodyModel = [];
 let testHairModel = [];
 
@@ -42,42 +37,10 @@ var story = ["Time to get ready for school. I can't be seen in public in my paja
     " " ,
     "Thanks for your help!"];
 
-
 /**
  *  Creates a scene that looks like a bedroom.
  */
 function createWorld() {
-
-
-    loader.load(
-        // resource URL
-        'models/modelDraft.gltf',
-        // called when the resource is loaded
-        function ( gltf ) {
-            testBodyModel.push(gltf.scene.children[0]);
-            testBodyModel[0].position.set(0,-8,25);
-            testBodyModel[0].scale.set(6,6,6);
-            testBodyModel[0].name = "body";
-            testBodyModel[0].material = new THREE.MeshPhongMaterial( { color: 'tan', side: THREE.DoubleSide } );
-            //testModels[0].rotateY( 70 * Math.PI / 180 );
-            testBodyModel[0].castShadow = true;
-            scene.add(testBodyModel[0]);
-        }
-    );
-    loader.load(
-        // resource URL
-        'models/hair.gltf',
-        // called when the resource is loaded
-        function ( gltf ) {
-            testHairModel.push(gltf.scene.children[0]);
-            testHairModel[0].position.set(0,-8,25);
-            testHairModel[0].scale.set(6,6,6);
-            testHairModel[0].name = "hair";
-            testHairModel[0].material = new THREE.MeshPhongMaterial( { color: '#bc8b37', side: THREE.DoubleSide } );
-            testHairModel[0].castShadow = true;
-            scene.add(testHairModel[0]);
-        }
-    );
 
     renderer.setClearColor(0xffffff, 1);  // white background
     scene = new THREE.Scene();
@@ -156,17 +119,14 @@ function createWorld() {
     bullet.position.y = 0;
 
     scene.add( bullet );
-
-
     let linegeom = new THREE.Geometry();
     linegeom.vertices.push(new THREE.Vector3(0,0,0));
     linegeom.vertices.push(new THREE.Vector3(0,100,0));
     ray = new THREE.Line( linegeom, new THREE.LineDashedMaterial( { color: 0xff69b4, dashSize: 5, gapSize: 5} ));
     ray.computeLineDistances();
 
-    //gunbase.add(ray);
     gunbase.add(camera);
-    // gunbase.add(gun);
+
     scene.add(gunbase);
 
     raycaster = new THREE.Raycaster( new THREE.Vector3(0,0,0), new THREE.Vector3(0,1,0) );
@@ -182,16 +142,11 @@ function updateForFrame() {
     if (storyCounter > 7) {
         storyCounter = 7;
     }
-    let d;
-
-
 
     let textureMap = new THREE.TextureLoader().load( 'textures/knit.jpeg' );
     textureMap.wrapS = textureMap.wrapT = THREE.RepeatWrapping;
     textureMap.anisotropy = 16;
     textureMap.encoding = THREE.sRGBEncoding;
-
-
 
     loader.load(
         // resource URL
@@ -207,9 +162,6 @@ function updateForFrame() {
             scene.add(testModels[0]);
         }
     );
-
-
-
 
     if (storyCounter < 3) {
 
@@ -252,31 +204,41 @@ function updateForFrame() {
             }
         );
     }
+    loader.load(
+        // resource URL
+        'models/modelDraft.gltf',
+        // called when the resource is loaded
+        function ( gltf ) {
+            testBodyModel.push(gltf.scene.children[0]);
+            testBodyModel[0].position.set(0,-8,25);
+            testBodyModel[0].scale.set(6,6,6);
+            testBodyModel[0].name = "body";
+            testBodyModel[0].material = new THREE.MeshPhongMaterial( { color: 'tan', side: THREE.DoubleSide } );
+            //testModels[0].rotateY( 70 * Math.PI / 180 );
+            testBodyModel[0].castShadow = true;
+            scene.add(testBodyModel[0]);
+        }
+    );
+    loader.load(
+        // resource URL
+        'models/hair.gltf',
+        // called when the resource is loaded
+        function ( gltf ) {
+            testHairModel.push(gltf.scene.children[0]);
+            testHairModel[0].position.set(0,-8,25);
+            testHairModel[0].scale.set(6,6,6);
+            testHairModel[0].name = "hair";
+            testHairModel[0].material = new THREE.MeshPhongMaterial( { color: '#bc8b37', side: THREE.DoubleSide } );
+            testHairModel[0].castShadow = true;
+            scene.add(testHairModel[0]);
+        }
+    );
 
 
     document.getElementById("dialog").innerHTML = "" + story[storyCounter];
     // $('#dialog').prepend('<div id="arrow"></div>');
 
-    //d.prepend('<div id="arrow"></div>');
 
-    // add input
-    //document.getElementById("#dialog").innerHTML = "" + story[0];
-
-}
-
-var hit = null;
-function newhit(obj) {
-    if (obj != hit) {
-        if (hit != null) {
-            hit.material.color.set(0xff69b4);
-            hit.material.needsUpdate = true;
-        }
-        if (obj != null) {
-            obj.material.color.set(0xff0000);
-            obj.material.needsUpdate = true;
-        }
-        hit = obj;
-    }
 }
 
 /**
@@ -285,33 +247,6 @@ function newhit(obj) {
  */
 function render() {
     renderer.render(scene, camera);
-}
-
-/**
- *  Creates a CubeTexture and starts loading the images.
- *  filenames must be an array containing six strings that
- *  give the names of the files for the positive x, negative x,
- *  positive y, negative y, positive z, and negative z
- *  images in that order.  path, if present, is pre-pended
- *  to each of the filenames to give the full path to the
- *  files.  No error checking is done here, and no callback
- *  function is implemented.  When the images are loaded, the
- *  texture will appear on the objects on which it is used
- *  in the next frame of the animation.
- */
-function makeCubeTexture(filenames, path) {
-    var URLs;
-    if (path) {
-        URLs = [];
-        for (var i = 0; i < 6; i++)
-            URLs.push( path + filenames[i] );
-    }
-    else {
-        URLs = filenames;
-    }
-    var loader = new THREE.CubeTextureLoader();
-    var texture = loader.load(URLs);
-    return texture;
 }
 
 /**
@@ -334,6 +269,7 @@ function makeTexture( imageURL, material ) {
     texture.anisotropy = renderer.getMaxAnisotropy();
     return texture;
 }
+
 //----------------------------- mouse and key support -------------------------------
 function doMouseDown(evt) {
     let fn = "[doMouseDown]: ";
@@ -342,7 +278,6 @@ function doMouseDown(evt) {
     let x = evt.clientX;
     let y = evt.clientY;
     console.log("Clicked mouse at " + x + "," + y);
-
 
     storyCounter++;
 }
@@ -424,7 +359,6 @@ function doKeyDown( event ) {
     }
 }
 
-
 //--------------------------- animation support -----------------------------------
 
 let clock;  // Keeps track of elapsed time of animation.
@@ -480,10 +414,6 @@ function init() {
 
 
 }
-
-
-
-
 
 init();
 
